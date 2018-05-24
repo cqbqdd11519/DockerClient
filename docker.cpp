@@ -1,60 +1,62 @@
+/****
+ Dependency
+ - libcurl
+ - [JSON++](https://github.com/hjiang/jsonxx)
+
+
+
+ Basic Usage
+
 #include "docker.h"
-    /*
-    *  Dependency
-    *  - libcurl
-    *  - [JSON++](https://github.com/hjiang/jsonxx)
-    */
+int main(){
+    Docker client = Docker();
+    std::cout << client.list_containers(true).json() << std::endl;
+    client.terminate();
+    return 0;
+} 
 
-    /*
-    *  Basic Usage
-    * 
-    * #include "docker.h"
-    * int main(){
-    *     Docker client = Docker();
-    *     std::cout << client.list_containers(true).json() << std::endl;
-    *     client.terminate();
-    *     return 0;
-    * } 
-    */
 
-    /*
-    *  Return Type for Each Methods
-    * 
-    * Object o; (jsonxx::Object)
-    *  - success        [bool]                  : if succeeded to request
-    *  - data           [Object/Array/string]   : actual data by server (data type depends on API, but it would be Object if 'success' is false)
-    *  - code(optional) [int]                   : http status code if 'success' is false
-    * 
-    * e.g.
-    * {
-    *   "success": false,
-    *   "code": 404,
-    *   "data": {
-    *       "message": "No such container: 5d271b3a52263330348b71948bd25cda455a49f7e7d69cfc73e6b2f3b5b41a4c" 
-    *   }
-    * } 
-    * 
-    * 
-    * {
-    *   "success": true ,
-    *   "data": {
-    *       "Architecture": "x86_64",
-    *           ...
-    *       "SystemTime": "2018-05-23T19:26:54.357768797+09:00" 
-    *   }
-    * }
-    */
 
-    /*
-    *  JSON Object / Array Usage
-    * 
-    * Object o; / Array o;
-    * o << "FIELD_NAME1" << "VALUE1";
-    * o << "FIELD_NAME2" << "VALUE2";
-    * 
-    * if(o.has<String>("FIELD_NAME1"))
-    *   string str = o.get<String>("FIELD_NAME1");
-    */
+ Return Type for Each Methods
+
+Object o; (jsonxx::Object)
+ - success        [bool]                  : if succeeded to request
+ - data           [Object/Array/string]   : actual data by server (data type depends on API, but it would be Object if 'success' is false)
+ - code(optional) [int]                   : http status code if 'success' is false
+
+e.g.
+{
+  "success": false,
+  "code": 404,
+  "data": {
+      "message": "No such container: 5d271b3a52263330348b71948bd25cda455a49f7e7d69cfc73e6b2f3b5b41a4c" 
+  }
+} 
+
+
+{
+  "success": true ,
+  "data": {
+      "Architecture": "x86_64",
+          ...
+      "SystemTime": "2018-05-23T19:26:54.357768797+09:00" 
+  }
+}
+
+
+
+ JSON Object / Array Usage
+
+Object o; / Array o;
+o << "FIELD_NAME1" << "VALUE1";
+o << "FIELD_NAME2" << "VALUE2";
+
+if(o.has<String>("FIELD_NAME1"))
+  string str = o.get<String>("FIELD_NAME1");
+
+****/
+
+#include "docker.h"
 
 /*
 *  
