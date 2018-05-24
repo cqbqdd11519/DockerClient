@@ -2,7 +2,7 @@ C++ Docker Client
 ===========================
 
 ## Dependency
- - libcurl
+ - [libcurl](https://curl.haxx.se/libcurl/)
  - [JSON++](https://github.com/hjiang/jsonxx)
 
 ## Basic Usage
@@ -47,7 +47,7 @@ Data type of 'data' depends on API, but it would be Object if 'success' is false
 
 ## Accessing Remote Docker Server
 For remote access, you sould first bind Docker Server to a port.
-You can bind by adding **-H tcp://0.0.0.0:<port>** in service daemon.
+You can bind by adding **-H tcp://0.0.0.0:\<port\>** in service daemon.
 ```bash
 # cat /lib/systemd/system/docker.service
 ....
