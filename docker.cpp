@@ -63,7 +63,7 @@ if(o.has<String>("FIELD_NAME1"))
 * START Docker Implementation
 * 
 */
-Docker::Docker() : host_uri("http:"){
+Docker::Docker() : host_uri("http:/v1.24"){
     curl_global_init(CURL_GLOBAL_ALL);
     is_remote = false;
 }
@@ -340,3 +340,4 @@ std::string param( std::string param_name, JSON_OBJECT param_value){
         return "";
     }
 }
+

@@ -15,7 +15,7 @@ using namespace std;
 string test_id = "5d271b3a52263330348b71948bd25cda455a49f7e7d69cfc73e6b2f3b5b41a4c";
 
 int main(){
-    Docker client = Docker("http://143.248.152.223:4000");
+    Docker client = Docker();
     /*
     *  START testing individual APIs
     */
@@ -54,3 +54,4 @@ int main(){
     client.terminate();
     return 0;
 }
+
