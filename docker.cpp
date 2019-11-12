@@ -258,7 +258,7 @@ JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, lo
     if(status == success_code || status == 200){
         doc.AddMember("success", true, doc.GetAllocator());
 
-        rapidjson::Value dataString;
+        JSON_VALUE dataString;
         dataString.SetString(readBuffer.c_str(), doc.GetAllocator());
 
         doc.AddMember("data", dataString, doc.GetAllocator());
@@ -351,7 +351,7 @@ std::string param( const std::string& param_name, JSON_DOCUMENT& param_value){
     }
 }
 
-std::string jsonToString(rapidjson::Value& doc){
+std::string jsonToString(JSON_VALUE & doc){
     rapidjson::StringBuffer buffer;
     buffer.Clear();
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

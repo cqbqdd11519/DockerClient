@@ -7,6 +7,7 @@
 #include "rapidjson/prettywriter.h"
 
 #define JSON_DOCUMENT rapidjson::Document
+#define JSON_VALUE rapidjson::Value
 
 typedef enum{
     GET,
@@ -21,7 +22,7 @@ std::string param( const std::string& param_name, bool param_value);
 std::string param( const std::string& param_name, int param_value);
 std::string param( const std::string& param_name, JSON_DOCUMENT& param_value);
 
-std::string jsonToString(rapidjson::Value& doc);
+std::string jsonToString(JSON_VALUE & doc);
 
 class Docker{
     public :

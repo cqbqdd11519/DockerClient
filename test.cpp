@@ -19,8 +19,8 @@ int main(){
     //doc = client.top_container(test_id);
     //doc = client.logs_container(test_id);
 
-    //rapidjson::Document param(rapidjson::kObjectType);
-    //rapidjson::Value commands(rapidjson::kArrayType);
+    //JSON_DOCUMENT param(rapidjson::kObjectType);
+    //JSON_VALUE commands(rapidjson::kArrayType);
     //commands.PushBack("/bin/bash", param.GetAllocator());
     //param.AddMember("Cmd", commands, param.GetAllocator());
     //param.AddMember("Image", "ubuntu:16.04", param.GetAllocator());
