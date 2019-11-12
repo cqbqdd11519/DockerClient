@@ -1,7 +1,7 @@
 /****
  Dependency
  - libcurl
- - [JSON++](https://github.com/hjiang/jsonxx)
+ - [RapidJSON](https://github.com/Tencent/rapidjson/)
 
 
 
@@ -10,8 +10,10 @@
 #include "docker.h"
 int main(){
     Docker client = Docker();
-    std::cout << client.list_containers(true).json() << std::endl;
-    client.terminate();
+
+    JSON_DOCUMENT doc = client.list_containers(true);
+    std::cout << jsonToString(doc) << std::endl;
+
     return 0;
 } 
 
@@ -19,7 +21,7 @@ int main(){
 
  Return Type for Each Methods
 
-Object o; (jsonxx::Object)
+Object o; (rapidjson::Document)
  - success        [bool]                  : if succeeded to request
  - data           [Object/Array/string]   : actual data by server (data type depends on API, but it would be Object if 'success' is false)
  - code(optional) [int]                   : http status code if 'success' is false
@@ -43,34 +45,32 @@ e.g.
   }
 }
 
-
-
- JSON Object / Array Usage
-
-Object o; / Array o;
-o << "FIELD_NAME1" << "VALUE1";
-o << "FIELD_NAME2" << "VALUE2";
-
-if(o.has<String>("FIELD_NAME1"))
-  string str = o.get<String>("FIELD_NAME1");
-
 ****/
 
 #include "docker.h"
+#include <utility>
+#include <sstream>
 
 /*
 *  
 * START Docker Implementation
 * 
 */
+JSON_DOCUMENT Docker::emptyDoc = JSON_DOCUMENT();
+
 Docker::Docker() : host_uri("http:/v1.24"){
     curl_global_init(CURL_GLOBAL_ALL);
     is_remote = false;
 }
-Docker::Docker(std::string host) : host_uri(host){
+Docker::Docker(std::string host) : host_uri(std::move(host)){
     curl_global_init(CURL_GLOBAL_ALL);
     is_remote = true;
 }
+
+Docker::~Docker(){
+    curl_global_cleanup();
+}
+
 
 /*
 *  
@@ -81,27 +81,27 @@ Docker::Docker(std::string host) : host_uri(host){
 /*
 * System
 */
-JSON_OBJECT Docker::system_info(){
+JSON_DOCUMENT Docker::system_info(){
     std::string path = "/info";
-    return requestAndParseJson<JSON_OBJECT,JSON_OBJECT>(GET,path);
+    return requestAndParseJson(GET,path);
 }
-JSON_OBJECT Docker::docker_version(){
+JSON_DOCUMENT Docker::docker_version(){
     std::string path = "/version";
-    return requestAndParseJson<JSON_OBJECT,JSON_OBJECT>(GET,path);
+    return requestAndParseJson(GET,path);
 }
 
 /*
 * Images
 */
-JSON_OBJECT Docker::list_images(){
+JSON_DOCUMENT Docker::list_images(){
     std::string path = "/images/json";
-    return requestAndParseJson<JSON_OBJECT,JSON_ARRAY>(GET,path);
+    return requestAndParseJson(GET,path);
 }
 
 /*
 * Containers
 */
-JSON_OBJECT Docker::list_containers(bool all, int limit, std::string since, std::string before, int size, JSON_OBJECT filters){
+JSON_DOCUMENT Docker::list_containers(bool all, int limit, const std::string& since, const std::string& before, int size, JSON_DOCUMENT& filters){
     std::string path = "/containers/json?";
     path += param("all", all);
     path += param("limit", limit);
@@ -109,71 +109,71 @@ JSON_OBJECT Docker::list_containers(bool all, int limit, std::string since, std:
     path += param("before", before);
     path += param("size", size);
     path += param("filters", filters);
-    return requestAndParseJson<JSON_OBJECT,JSON_ARRAY>(GET,path);
+    return requestAndParseJson(GET,path);
 }
-JSON_OBJECT Docker::inspect_container(std::string container_id){
+JSON_DOCUMENT Docker::inspect_container(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/json";
-    return requestAndParseJson<JSON_OBJECT,JSON_OBJECT>(GET,path);
+    return requestAndParseJson(GET,path);
 }
-JSON_OBJECT Docker::top_container(std::string container_id){
+JSON_DOCUMENT Docker::top_container(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/top";
-    return requestAndParseJson<JSON_OBJECT,JSON_OBJECT>(GET,path);
+    return requestAndParseJson(GET,path);
 }
-JSON_OBJECT Docker::logs_container(std::string container_id, bool follow, bool o_stdout, bool o_stderr, bool timestamps, std::string tail){
+JSON_DOCUMENT Docker::logs_container(const std::string& container_id, bool follow, bool o_stdout, bool o_stderr, bool timestamps, const std::string& tail){
     std::string path = "/containers/" + container_id + "/logs?";
     path += param("follow", follow);
     path += param("stdout", o_stdout);
     path += param("stderr", o_stderr);
     path += param("timestamps", timestamps);
     path += param("tail", tail);
-    return requestAndParse<JSON_OBJECT>(GET,path,101);
+    return requestAndParse(GET,path,101);
 }
-JSON_OBJECT Docker::create_container(JSON_OBJECT parameters){
+JSON_DOCUMENT Docker::create_container(JSON_DOCUMENT& parameters){
     std::string path = "/containers/create";
-    return requestAndParseJson<JSON_OBJECT,JSON_OBJECT>(POST,path,201,parameters);
+    return requestAndParseJson(POST,path,201,parameters);
 }
-JSON_OBJECT Docker::start_container(std::string container_id){
+JSON_DOCUMENT Docker::start_container(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/start";
-    return requestAndParse<JSON_OBJECT>(POST,path,204);
+    return requestAndParse(POST,path,204);
 }
-JSON_OBJECT Docker::get_container_changes(std::string container_id){
+JSON_DOCUMENT Docker::get_container_changes(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/changes";
-    return requestAndParseJson<JSON_OBJECT,JSON_ARRAY>(GET,path);
+    return requestAndParseJson(GET,path);
 }
-JSON_OBJECT Docker::stop_container(std::string container_id, int delay){
+JSON_DOCUMENT Docker::stop_container(const std::string& container_id, int delay){
     std::string path = "/containers/" + container_id + "/stop?";
     path += param("t", delay);
-    return requestAndParse<JSON_OBJECT>(POST,path,204);
+    return requestAndParse(POST,path,204);
 }
-JSON_OBJECT Docker::kill_container(std::string container_id, int signal){
+JSON_DOCUMENT Docker::kill_container(const std::string& container_id, int signal){
     std::string path = "/containers/" + container_id + "/kill?";
     path += param("signal", signal);
-    return requestAndParse<JSON_OBJECT>(POST,path,204);
+    return requestAndParse(POST,path,204);
 }
-JSON_OBJECT Docker::pause_container(std::string container_id){
+JSON_DOCUMENT Docker::pause_container(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/pause";
-    return requestAndParse<JSON_OBJECT>(POST,path,204);
+    return requestAndParse(POST,path,204);
 }
-JSON_OBJECT Docker::wait_container(std::string container_id){
+JSON_DOCUMENT Docker::wait_container(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/wait";
-    return requestAndParseJson<JSON_OBJECT,JSON_OBJECT>(POST,path);
+    return requestAndParseJson(POST,path);
 }
-JSON_OBJECT Docker::delete_container(std::string container_id, bool v, bool force){
+JSON_DOCUMENT Docker::delete_container(const std::string& container_id, bool v, bool force){
     std::string path = "/containers/" + container_id + "?";
     path += param("v", v);
     path += param("force", force);
-    return requestAndParse<JSON_OBJECT>(DELETE,path,204);
+    return requestAndParse(DELETE,path,204);
 }
-JSON_OBJECT Docker::unpause_container(std::string container_id){
+JSON_DOCUMENT Docker::unpause_container(const std::string& container_id){
     std::string path = "/containers/" + container_id + "/unpause?";
-    return requestAndParse<JSON_OBJECT>(POST,path,204);
+    return requestAndParse(POST,path,204);
 }
-JSON_OBJECT Docker::restart_container(std::string container_id, int delay){
+JSON_DOCUMENT Docker::restart_container(const std::string& container_id, int delay){
     std::string path = "/containers/" + container_id + "/restart?";
     path += param("t", delay);
-    return requestAndParse<JSON_OBJECT>(POST,path,204);
+    return requestAndParse(POST,path,204);
 }
-JSON_OBJECT Docker::attach_to_container(std::string container_id, bool logs, bool stream, bool o_stdin, bool o_stdout, bool o_stderr){
+JSON_DOCUMENT Docker::attach_to_container(const std::string& container_id, bool logs, bool stream, bool o_stdin, bool o_stdout, bool o_stderr){
     std::string path = "/containers/" + container_id + "/attach?";
     path += param("logs", logs);
     path += param("stream", stream);
@@ -181,14 +181,10 @@ JSON_OBJECT Docker::attach_to_container(std::string container_id, bool logs, boo
     path += param("stdout", o_stdout);
     path += param("stderr", o_stderr);
 
-    return requestAndParse<JSON_OBJECT>(POST,path,101);
+    return requestAndParse(POST,path,101);
 }
-//void Docker::copy_from_container(std::string container_id, std::string file_path, std::string dest_tar_file){}
+//void Docker::copy_from_container(const std::string& container_id, const std::string& file_path, const std::string& dest_tar_file){}
 
-
-void Docker::terminate(){
-    curl_global_cleanup();
-}
 
 /*
 *  
@@ -196,12 +192,11 @@ void Docker::terminate(){
 * 
 */
 
-template <typename paramT>
-JSON_OBJECT Docker::requestAndParse(Method method, std::string path, long success_code, paramT param, bool isReturnJson){
+JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, long success_code, JSON_DOCUMENT& param, bool isReturnJson){
     std::string readBuffer;
     std::string paramString;
     std::string method_str;
-    struct curl_slist *headers = NULL;
+    struct curl_slist *headers = nullptr;
     const char *paramChar;
     switch(method){
         case GET:
@@ -226,7 +221,11 @@ JSON_OBJECT Docker::requestAndParse(Method method, std::string path, long succes
         curl_global_cleanup();
         exit(1);
     }
-    paramString = param.json();
+    rapidjson::StringBuffer buffer;
+    buffer.Clear();
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    param.Accept(writer);
+    paramString = std::string(buffer.GetString());
     paramChar = paramString.c_str();
     if(isReturnJson)
         headers = curl_slist_append(headers, "Accept: application/json");
@@ -253,34 +252,39 @@ JSON_OBJECT Docker::requestAndParse(Method method, std::string path, long succes
     long status = 0;
     curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &status);
     curl_easy_cleanup(curl);
-    //std::cout << readBuffer << std::endl;
-    JSON_OBJECT o;
+
+    const char* buf = readBuffer.c_str();
+    JSON_DOCUMENT doc(rapidjson::kObjectType);
     if(status == success_code || status == 200){
-        o << "success" << true;
-        o << "data" << readBuffer;
+        doc.AddMember("success", true, doc.GetAllocator());
+
+        rapidjson::Value dataString;
+        dataString.SetString(readBuffer.c_str(), doc.GetAllocator());
+
+        doc.AddMember("data", dataString, doc.GetAllocator());
     }else{
-        JSON_OBJECT err;
-        err.parse(readBuffer);
-        o << "success" << false;
-        o << "code" << status;
-        o << "data" << err;
+        JSON_DOCUMENT resp(&doc.GetAllocator());
+        resp.Parse(buf);
+
+        doc.AddMember("success", false, doc.GetAllocator());
+        doc.AddMember("code", status, doc.GetAllocator());
+        doc.AddMember("data", resp, doc.GetAllocator());
     }
-    return o;
+    return doc;
 }
 
-template <typename paramT, typename returnT>
-JSON_OBJECT Docker::requestAndParseJson(Method method, std::string path, long success_code, paramT param){
-    JSON_OBJECT result_obj = requestAndParse<paramT>(method,path,success_code,param,true);
-    bool result = result_obj.get<bool>("success");
+JSON_DOCUMENT Docker::requestAndParseJson(Method method, const std::string& path, long success_code, JSON_DOCUMENT& param){
+    auto result_obj = requestAndParse(method,path,success_code,param,true);
+    bool result = (result_obj.HasMember("success") && result_obj["success"].IsBool() && result_obj["success"].GetBool());
     if(result){
-        returnT o;
-        o.parse(result_obj.get<std::string>("data"));
+        JSON_DOCUMENT doc(rapidjson::kObjectType);
 
-        JSON_OBJECT out;
-        out << "success" << true;
-        out << "data" << o;
-        //cout << o.json() << endl;
-        return out;
+        JSON_DOCUMENT data(&doc.GetAllocator());
+        data.Parse(result_obj["data"].GetString());
+
+        doc.AddMember("success", true, doc.GetAllocator());
+        doc.AddMember("data", data, doc.GetAllocator());
+        return doc;
     }else{
         return result_obj;
     }
@@ -292,7 +296,7 @@ JSON_OBJECT Docker::requestAndParseJson(Method method, std::string path, long su
 * 
 */
 
-std::string param( std::string param_name, std::string param_value){
+std::string param( const std::string& param_name, const std::string& param_value){
     if(!param_value.empty()){
         return "&" + param_name + "=" + param_value;
     }
@@ -301,8 +305,8 @@ std::string param( std::string param_name, std::string param_value){
     }
 }
 
-std::string param( std::string param_name, const char* param_value){
-    if(param_value != NULL){
+std::string param( const std::string& param_name, const char* param_value){
+    if(param_value != nullptr){
         return "&" + param_name + "=" + param_value;
     }
     else{
@@ -310,7 +314,7 @@ std::string param( std::string param_name, const char* param_value){
     }
 }
 
-std::string param( std::string param_name, bool param_value){
+std::string param( const std::string& param_name, bool param_value){
     std::string ret;
     ret = "&" + param_name + "=";
     if(param_value){
@@ -321,7 +325,7 @@ std::string param( std::string param_name, bool param_value){
     }
 }
 
-std::string param( std::string param_name, int param_value){
+std::string param( const std::string& param_name, int param_value){
     if(param_value != -1){
         std::ostringstream convert;
         convert << param_value;
@@ -332,12 +336,25 @@ std::string param( std::string param_name, int param_value){
     }
 }
 
-std::string param( std::string param_name, JSON_OBJECT param_value){
-    if(!param_value.empty()){
-        return "&" + param_name + "=" + param_value.json();
+std::string param( const std::string& param_name, JSON_DOCUMENT& param_value){
+    if(param_value.IsObject()){
+        std::string paramString;
+        rapidjson::StringBuffer buffer;
+        buffer.Clear();
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        param_value.Accept(writer);
+        paramString = std::string(buffer.GetString());
+        return "&" + param_name + "=" + paramString;
     }
     else{
         return "";
     }
 }
 
+std::string jsonToString(rapidjson::Value& doc){
+    rapidjson::StringBuffer buffer;
+    buffer.Clear();
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    doc.Accept(writer);
+    return std::string(buffer.GetString());
+}

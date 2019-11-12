@@ -3,21 +3,25 @@ C++ Docker Client
 
 ## Dependency
  - [libcurl](https://curl.haxx.se/libcurl/)
- - [JSON++](https://github.com/hjiang/jsonxx)
+ - [RapidJSON](https://github.com/Tencent/rapidjson/)
 
 ## Basic Usage
 ```C++
 #include "docker.h"
 int main(){
     Docker client = Docker();
-    std::cout << client.list_containers(true).json() << std::endl;
-    client.terminate();
+
+    JSON_DOCUMENT doc = client.list_containers(true); 
+    std::cout << jsonToString(doc) << std::endl;
+
     return 0;
 }
 ```
 
 ## Return of Each Methods
-Every return type is **jsonxx::Object** (refer to [JSON++](https://github.com/hjiang/jsonxx) for its usage)
+Every return type is **JSON_OBJECT** (alias of **rapidjson::Document**)
+
+Refer to [RapidJSON](https://github.com/Tencent/rapidjson/) for the detailed usage
 ```
 Object o;
  - success        [bool]                  : if succeeded to request
@@ -61,8 +65,10 @@ ExecStart=/usr/bin/docker daemon -H fd:// -H tcp://0.0.0.0:4000
 #include "docker.h"
 int main(){
     Docker client = Docker("http://<ip>:<port>");
-    std::cout << client.list_containers(true).json() << std::endl;
-    client.terminate();
+
+    JSON_DOCUMENT doc = client.list_containers(true); 
+    std::cout << jsonToString(doc) << std::endl;
+
     return 0;
 }
 ```

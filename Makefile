@@ -1,28 +1,25 @@
 NAME=libdocker-cpp
 LIB=$(NAME).so
 
+INC=-I. -Irapidjson/include
 SRC=docker.cpp
 OBJ=docker.o
-
-DEPDIR=jsonxx
-DEPSRC=$(DEPDIR)/jsonxx.cc
-DEPOBJ=jsonxx.o
 
 LD_FLAGS=-lcurl
 
 all: $(LIB)
 
-$(LIB): $(OBJ) $(DEPOBJ)
+$(LIB): $(OBJ)
 	g++ -shared -o $(LIB) $(OBJ) $(DEPOBJ) $(LD_FLAGS)
 
-$(OBJ): $(SRC)
-	g++ -fPIC -c $< -o $@ $(LD_FLAGS)
+%.o: %.cpp
+	g++ -g -std=c++11 -fPIC $(INC) -c $< -o $@ $(LD_FLAGS)
 
-$(DEPOBJ): $(DEPSRC)
-	g++ -fPIC -c $< -o $@
+test: $(OBJ) test.o
+	g++ -g -o test test.o $(OBJ) $(LD_FLAGS)
 
 clean:
 	rm -f $(LIB)
-	rm -f $(DEPOBJ)
-	rm -f $(OBJ)
+	rm -f test
+	rm -f *.o
 
