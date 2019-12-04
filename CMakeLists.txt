@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 3.10)
 project(DockerClient)
 
 find_package(CURL)
-find_package(RapidJSON)
 
 # Add rapidJSON dependency
+set(RAPIDJSON_BUILD_TESTS OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/rapidjson)
 
 
-add_library(docker-cpp)
+add_library(docker-cpp STATIC "")
 
 target_include_directories(docker-cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(docker-cpp PUBLIC ${CURL_INCLUDE_DIRS})
