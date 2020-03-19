@@ -69,11 +69,12 @@ class Docker{
 
         static JSON_DOCUMENT emptyDoc;
 
-        JSON_DOCUMENT requestAndParse(Method method, const std::string& path, long success_code = 200, JSON_DOCUMENT& param=emptyDoc, bool isReturnJson=false);
-        JSON_DOCUMENT requestAndParseJson(Method method, const std::string& path, long success_code = 200, JSON_DOCUMENT& param=emptyDoc);
+        JSON_DOCUMENT requestAndParse(Method method, const std::string& path, unsigned success_code = 200, JSON_DOCUMENT& param=emptyDoc, bool isReturnJson=false);
+        JSON_DOCUMENT requestAndParseJson(Method method, const std::string& path, unsigned success_code = 200, JSON_DOCUMENT& param=emptyDoc);
 
         static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp){
             ((std::string*)userp)->append((char*)contents, size * nmemb);
             return size * nmemb;
         }
 };
+

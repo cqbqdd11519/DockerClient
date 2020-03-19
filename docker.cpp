@@ -192,7 +192,7 @@ JSON_DOCUMENT Docker::attach_to_container(const std::string& container_id, bool 
 * 
 */
 
-JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, long success_code, JSON_DOCUMENT& param, bool isReturnJson){
+JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, unsigned success_code, JSON_DOCUMENT& param, bool isReturnJson){
     std::string readBuffer;
     std::string paramString;
     std::string method_str;
@@ -249,7 +249,7 @@ JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, lo
     if(res != CURLE_OK)
         fprintf(stderr, "curl_easy_perform() failed: %s\n",
             curl_easy_strerror(res));
-    long status = 0;
+    unsigned status = 0;
     curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &status);
     curl_easy_cleanup(curl);
 
@@ -273,7 +273,7 @@ JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, lo
     return doc;
 }
 
-JSON_DOCUMENT Docker::requestAndParseJson(Method method, const std::string& path, long success_code, JSON_DOCUMENT& param){
+JSON_DOCUMENT Docker::requestAndParseJson(Method method, const std::string& path, unsigned success_code, JSON_DOCUMENT& param){
     auto result_obj = requestAndParse(method,path,success_code,param,true);
     bool result = (result_obj.HasMember("success") && result_obj["success"].IsBool() && result_obj["success"].GetBool());
     if(result){
