@@ -267,7 +267,8 @@ JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, lo
         resp.Parse(buf);
 
         doc.AddMember("success", false, doc.GetAllocator());
-        doc.AddMember("code", status, doc.GetAllocator());
+        // Forced bool parameter required to prevent ambiguous function call (long appears to cause problems)
+        doc.AddMember("code", (bool)status, doc.GetAllocator());
         doc.AddMember("data", resp, doc.GetAllocator());
     }
     return doc;
