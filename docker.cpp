@@ -270,6 +270,7 @@ JSON_DOCUMENT Docker::requestAndParse(Method method, const std::string& path, un
         doc.AddMember("code", status, doc.GetAllocator());
         doc.AddMember("data", resp, doc.GetAllocator());
     }
+    curl_slist_free_all(headers);
     return doc;
 }
 
