@@ -48,7 +48,7 @@ class Docker{
         JSON_DOCUMENT inspect_container(const std::string& container_id);
         JSON_DOCUMENT top_container(const std::string& container_id);
         JSON_DOCUMENT logs_container(const std::string& container_id, bool follow=false, bool o_stdout=true, bool o_stderr=false, bool timestamps=false, const std::string& tail="all");
-        JSON_DOCUMENT create_container(JSON_DOCUMENT& parameters);
+        JSON_DOCUMENT create_container(JSON_DOCUMENT& parameters, const std::string& name="");
         JSON_DOCUMENT start_container(const std::string& container_id);
         JSON_DOCUMENT get_container_changes(const std::string& container_id);
         JSON_DOCUMENT stop_container(const std::string& container_id, int delay=-1);
