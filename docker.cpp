@@ -128,8 +128,9 @@ JSON_DOCUMENT Docker::logs_container(const std::string& container_id, bool follo
     path += param("tail", tail);
     return requestAndParse(GET,path,101);
 }
-JSON_DOCUMENT Docker::create_container(JSON_DOCUMENT& parameters){
+JSON_DOCUMENT Docker::create_container(JSON_DOCUMENT& parameters, const std::string& name){
     std::string path = "/containers/create";
+    path += not name.empty() ? "?name=" + name : "";
     return requestAndParseJson(POST,path,201,parameters);
 }
 JSON_DOCUMENT Docker::start_container(const std::string& container_id){
