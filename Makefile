@@ -28,7 +28,7 @@ clean:
 	rm -f *.o
 
 install: $(LIB)
-	install -d $(DESTDIR)/$(PREFIX)/lib/
+	install -d $(DESTDIR)$(PREFIX)/lib/
 	install -m 644 $(LIB) $(DESTDIR)$(PREFIX)/lib/
 	install -d $(DESTDIR)$(PREFIX)/include/
 	install -m 644 docker.h $(DESTDIR)$(PREFIX)/include/
